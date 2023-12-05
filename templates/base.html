@@ -1,0 +1,24 @@
+<html>
+      <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+    <body>
+        <div class="header">
+            <%block name="header">
+                <h2>
+                    <%block name="title"/>
+                </h2>
+            </%block>
+        </div>
+
+        ${self.body()}
+          <button hx-get="/test" hx-swap="outerHTML">
+            Click Me
+          </button>
+
+
+        <div class="footer">
+            <%block name="footer">
+                this is the footer
+            </%block>
+        </div>
+    </body>
+</html>
