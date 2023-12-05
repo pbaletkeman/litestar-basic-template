@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-
 from litestar.exceptions import HTTPException
 from litestar import status_codes
 from advanced_alchemy import SQLAlchemyAsyncRepository
@@ -81,7 +80,7 @@ class PublisherController(Controller):
     @post(tags=publisher_controller_tag)
     async def create_publisher(self, publisher_repo: PublisherRepository,
                                data: PublisherCreate, ) -> PublisherDTO:
-        """Create a new meta_data tag."""
+        """Create a new ."""
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
             # _data["slug"] = await publisher_repo.get_available_slug(_data["name"])
@@ -100,7 +99,7 @@ class PublisherController(Controller):
             data: PublisherCreate,
             publisher_id: int = Parameter(title='Publisher Id', description='The publisher to update.', ),
     ) -> PublisherCreate:
-        """Update an meta_data tag."""
+        """Update an."""
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': publisher_id})
@@ -118,7 +117,7 @@ class PublisherController(Controller):
                                           description='The id meta data tag to delete.', ),
     ) -> None:
         """## Delete
-         a meta_data tag from the system."""
+          from the system."""
         try:
             _ = await publisher_repo.delete(publisher_id)
             await publisher_repo.session.commit()

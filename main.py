@@ -14,6 +14,7 @@ from litestar.openapi import OpenAPIConfig
 from litestar.template.config import TemplateConfig
 from litestar.response import Template
 
+from controller.book import BookController
 from controller.publisher import PublisherController
 from model.base import Base
 
@@ -24,7 +25,6 @@ from logger import logger
 
 from shared import provide_limit_offset_pagination
 
-# from meta_data import MetaDataTagController
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 sqlalchemy_config = SQLAlchemyAsyncConfig(
@@ -62,6 +62,7 @@ def index_test() -> Template:
 app = Litestar(
     route_handlers=[
         PublisherController,
+        BookController,
         index, index_test
     ],
     openapi_config=OpenAPIConfig(
