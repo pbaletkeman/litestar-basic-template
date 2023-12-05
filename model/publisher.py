@@ -33,11 +33,11 @@ class Publisher(Base):
 class PublisherDTO(BaseModel):
     id: Optional[int]
     sort_order: Optional[int] = 0
-    books: Optional[List[BookCreate]]
+    books: Optional[List[BookCreate]] = None
     name: str
 
 
 class PublisherCreate(BaseModel):
     name: str
     sort_order: Optional[int] = 0
-    books: Optional[List[BookCreate]]
+    books: Optional[List[BookCreate]] = None
