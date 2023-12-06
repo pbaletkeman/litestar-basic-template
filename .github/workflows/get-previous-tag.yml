@@ -1,7 +1,9 @@
 name: Generate Tag
 run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+on: [push]
 jobs:
-  generate:
+  Explore-GitHub-Actions:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
