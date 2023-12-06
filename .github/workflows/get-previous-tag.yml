@@ -1,4 +1,4 @@
-name: Generate Tag
+name: Get Tag
 run-name: Get Previous Tag
 on: [push]
 jobs:
