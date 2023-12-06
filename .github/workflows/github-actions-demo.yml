@@ -16,3 +16,7 @@ jobs:
         run: |
           ls ${{ github.workspace }}
       - run: echo "🍏 This job's status is ${{ job.status }}."
+
+      - name: Bump version and push tag
+        id: new_tag
+        uses: anothrNick/github-tag-action@1.64.0
