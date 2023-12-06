@@ -83,12 +83,12 @@ class PublisherController(Controller):
         """Create a new ."""
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
-            # obj = await publisher_repo.add(Publisher(**_data))
-            # await publisher_repo.session.commit()
-            # return PublisherDTO.model_validate(obj)
+            obj = await publisher_repo.add(Publisher(**_data))
+            await publisher_repo.session.commit()
+            return PublisherDTO.model_validate(obj)
 
             # await publisher_repo.session.commit()
-            return data
+            # return data
 
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
