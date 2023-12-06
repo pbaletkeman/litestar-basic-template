@@ -1,4 +1,5 @@
-name: Generate
+name: Generate Tag
+run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
 jobs:
   generate:
     steps:
