@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 from litestar.exceptions import HTTPException
 from litestar import status_codes
@@ -15,7 +14,6 @@ from litestar.params import Parameter
 from litestar.repository.filters import LimitOffset, OrderBy
 from pydantic import TypeAdapter
 
-from model.base import is_pydantic
 from model.publisher import Publisher, PublisherDTO, PublisherCreate
 
 if TYPE_CHECKING:
