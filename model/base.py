@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+import json
+from datetime import datetime
+
+from typing_extensions import Self
+
 from advanced_alchemy.base import AuditColumns
 from pydantic import BaseModel as _BaseModel
 from sqlalchemy import String
-from sqlalchemy.orm import declarative_mixin, Mapped, mapped_column, DeclarativeBase
+from sqlalchemy.orm import declarative_mixin, Mapped, mapped_column, DeclarativeBase, InstanceState
 
 
 def is_pydantic(obj: object):
@@ -14,21 +19,22 @@ def is_pydantic(obj: object):
 class Base(DeclarativeBase, AuditColumns):
     """Base for SQLAlchemy declarative models in this project with int primary keys."""
 
-    @classmethod
-    def from_dto(cls, dto: BaseModel):
-        obj = cls()
-        properties = dict(dto)
-        for key, value in properties.items():
-            try:
-                if is_pydantic(value):
-                    value = getattr(cls, key).property.mapper.class_.from_dto(value)
-                setattr(obj, key, value)
-            except AttributeError as e:
-                raise AttributeError(e)
-        return obj
+    def __json__(self):
+        json_exclude = getattr(self, '__json_exclude__', set())
+        class_dict = {key: value for key, value in self.__dict__.items() if not key.startswith('_')
+                      and key not in json_exclude}
 
+        for i in class_dict:
+            if 'time' in str(type(class_dict[i])):
+                class_dict[i] = str(class_dict.get(i).isoformat(' '))  # format time and make it a str
 
+        return class_dict
 
+    def __str__(self):
+        return {key: value for key, value in self.__dict__.items()}
+
+    def __repr__(self):
+        return {key: value for key, value in self.__dict__.items()}
 
 
 class BaseModel(_BaseModel):

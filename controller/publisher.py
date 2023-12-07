@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING
 from litestar.exceptions import HTTPException
 from litestar import status_codes
@@ -14,6 +15,7 @@ from litestar.params import Parameter
 from litestar.repository.filters import LimitOffset, OrderBy
 from pydantic import TypeAdapter
 
+from model.base import is_pydantic
 from model.publisher import Publisher, PublisherDTO, PublisherCreate
 
 if TYPE_CHECKING:
@@ -83,12 +85,14 @@ class PublisherController(Controller):
         """Create a new ."""
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
-            obj = await publisher_repo.add(Publisher(**_data))
-            await publisher_repo.session.commit()
-            return PublisherDTO.model_validate(obj)
+            # books = _data.pop('books')
 
-            # await publisher_repo.session.commit()
-            # return data
+            pub = Publisher(**_data)
+
+            publisher_repo.session.add(pub)
+            await publisher_repo.session.commit()
+
+            return PublisherDTO.model_validate(pub.__json__())
 
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
