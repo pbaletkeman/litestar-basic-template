@@ -25,9 +25,9 @@ class Publisher(Base):
     # books: Mapped[List["Book"]] = relationship()
 
     books: Mapped[List["Book"]] = relationship(back_populates="publisher",
-                                               # order_by="desc(publisher.name)",
+                                               order_by="asc(Book.sort_order), asc(Book.name)",
                                                primaryjoin="Publisher.id == Book.publisher_id",
-                                               # lazy="joined"
+                                               lazy="selectin"
                                                )
 
     def __init__(self, **kw: Any):
