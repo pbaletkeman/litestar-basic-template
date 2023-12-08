@@ -14,7 +14,7 @@ from litestar.params import Parameter
 from litestar.repository.filters import LimitOffset, OrderBy
 from pydantic import TypeAdapter
 
-from model.book import Book, BookDTO, NewBook
+from model.book import Book, BookDTO
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -79,7 +79,7 @@ class BookController(Controller):
 
     @post(tags=book_controller_tag)
     async def create_book(self, book_repo: BookRepository,
-                          data: NewBook, ) -> BookDTO:
+                          data: BookDTO, ) -> BookDTO:
         """Create a new."""
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
@@ -96,16 +96,16 @@ class BookController(Controller):
     async def update_book(
             self,
             book_repo: BookRepository,
-            data: NewBook,
+            data: BookDTO,
             book_id: int = Parameter(title='Book Id', description='The book to update.', ),
-    ) -> NewBook:
+    ) -> BookDTO:
         """Update an"""
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': book_id})
             obj = await book_repo.update(Book(**_data))
             await book_repo.session.commit()
-            return NewBook.model_validate(obj)
+            return BookDTO.model_validate(obj)
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 

@@ -15,7 +15,7 @@ from litestar.repository.filters import LimitOffset, OrderBy
 from pydantic import TypeAdapter
 
 from controller.book import provide_book_repo, BookRepository
-from model.book import NewBook, Book
+from model.book import Book, BookDTO
 from model.publisher import Publisher, PublisherDTO, PublisherCreate
 
 if TYPE_CHECKING:
@@ -100,7 +100,7 @@ class PublisherController(Controller):
         """
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
-            books: list[NewBook] | None = None
+            books: list[BookDTO] | None = None
             if 'books' in _data:
                 books = _data.pop('books')
 
@@ -145,7 +145,7 @@ class PublisherController(Controller):
             self,
             publisher_repo: PublisherRepository,
             publisher_id: int = Parameter(title='Publisher Id',
-                                          description='The id meta data tag to delete.', ),
+                                          description='The item to delete.', ),
     ) -> None:
         """## Delete
           from the system."""

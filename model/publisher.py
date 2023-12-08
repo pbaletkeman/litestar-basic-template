@@ -22,8 +22,6 @@ class Publisher(Base):
     sort_order: Mapped[int] = mapped_column(nullable=False, default=0, sort_order=1)
     name: Mapped[str] = mapped_column(String(length=30), nullable=False, sort_order=2)
 
-    # books: Mapped[List["Book"]] = relationship()
-
     books: Mapped[List["Book"]] = relationship(back_populates="publisher",
                                                order_by="asc(Book.sort_order), asc(Book.name)",
                                                primaryjoin="Publisher.id == Book.publisher_id",
@@ -48,3 +46,8 @@ class PublisherCreate(BaseModel):
     name: str
     sort_order: Optional[int] = 0
     books: Optional[List[BookCreate]] = None
+
+class PublisherUpdate(BaseModel):
+    name: str
+    sort_order: Optional[int] = 0
+    books: Optional[List[BookDTO]] = None

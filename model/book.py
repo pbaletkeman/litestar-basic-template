@@ -21,12 +21,6 @@ class BookCreate(BaseModel):
     sort_order: Optional[int] = 0
 
 
-class NewBook(BaseModel):
-    name: str
-    publisher_id: int
-    sort_order: Optional[int] = 0
-
-
 class Book(Base):
     """
     """
@@ -37,9 +31,7 @@ class Book(Base):
     name: Mapped[str] = mapped_column(String(length=30), nullable=False, sort_order=2)
 
     publisher: Mapped["Publisher"] = relationship(back_populates="books",
-                                                  # order_by="desc(publisher.name)",
                                                   primaryjoin="Publisher.id == Book.publisher_id",
-                                                  # lazy="joined"
                                                   )
 
     def __init__(self, **kw: Any):
