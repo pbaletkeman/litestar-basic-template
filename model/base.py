@@ -19,7 +19,7 @@ def is_pydantic(obj: object):
 class Base(DeclarativeBase, AuditColumns):
     """Base for SQLAlchemy declarative models in this project with int primary keys."""
 
-    def __json__(self):
+    def to_dict(self):
         json_exclude = getattr(self, '__json_exclude__', set())
         class_dict = {key: value for key, value in self.__dict__.items() if not key.startswith('_')
                       and key not in json_exclude}

@@ -56,7 +56,7 @@ class PublisherController(Controller):
         try:
             order_by1 = OrderBy(field_name=Publisher.sort_order)
             order_by2 = OrderBy(field_name=Publisher.name)
-            results, total = await publisher_repo.list_and_count(limit_offset, order_by1, order_by2)
+            results, total = await publisher_repo.list_and_count(limit_offset, order_by1, order_by2, )
             type_adapter = TypeAdapter(list[PublisherDTO])
             return OffsetPagination[PublisherDTO](
                 items=type_adapter.validate_python(results),
@@ -107,14 +107,14 @@ class PublisherController(Controller):
             pub = Publisher(**_data)
             publisher_repo.session.add(pub)
             await publisher_repo.session.commit()
-            return_entity = pub.__json__()
+            return_entity = pub.to_dict()
 
             if books:
                 for b in books:
                     b['publisher_id'] = pub.id
                 book_items = await book_repo.add_many([Book(**b) for b in books])
                 await book_repo.session.commit()
-                return_entity['books'] = [b.__json__() for b in book_items]
+                return_entity['books'] = [b.to_dict() for b in book_items]
 
             return PublisherDTO.model_validate(return_entity)
 

@@ -10,7 +10,7 @@ from litestar.config.compression import CompressionConfig
 from litestar.contrib.mako import MakoTemplateEngine
 from litestar.contrib.sqlalchemy.plugins import AsyncSessionConfig, SQLAlchemyAsyncConfig, SQLAlchemyInitPlugin
 from litestar.di import Provide
-from litestar.openapi import OpenAPIConfig
+from litestar.openapi import OpenAPIConfig, OpenAPIController
 from litestar.template.config import TemplateConfig
 from litestar.response import Template
 
@@ -24,7 +24,6 @@ if TYPE_CHECKING:
 from logger import logger
 
 from shared import provide_limit_offset_pagination
-
 
 session_config = AsyncSessionConfig(expire_on_commit=False)
 sqlalchemy_config = SQLAlchemyAsyncConfig(
@@ -59,6 +58,9 @@ def index_test() -> Template:
     return Template(template_name='test.html.mako')
 
 
+# x = OpenAPIController()
+# x.favicon_url
+
 app = Litestar(
     route_handlers=[
         PublisherController,
@@ -67,13 +69,12 @@ app = Litestar(
     ],
     openapi_config=OpenAPIConfig(
         title='My API', version='1.0.0',
-        root_schema_site='elements',  # swagger, elements, redoc
+        root_schema_site='elements',  # swagger, elements, redoc, rapidoc
         path='/docs',
         create_examples=False,
         use_handler_docstrings=True,
     ),
     exception_handlers={
-
         # exceptions.ApplicationError: exceptions.exception_to_http_response,
     },
     template_config=TemplateConfig(

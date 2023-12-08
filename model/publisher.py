@@ -22,9 +22,13 @@ class Publisher(Base):
     sort_order: Mapped[int] = mapped_column(nullable=False, default=0, sort_order=1)
     name: Mapped[str] = mapped_column(String(length=30), nullable=False, sort_order=2)
 
-    books: Mapped[List["Book"]] = relationship()
+    # books: Mapped[List["Book"]] = relationship()
 
-    # books: Mapped[List["Book"]] = relationship(back_populates="publisher")
+    books: Mapped[List["Book"]] = relationship(back_populates="publisher",
+                                               # order_by="desc(publisher.name)",
+                                               primaryjoin="Publisher.id == Book.publisher_id",
+                                               # lazy="joined"
+                                               )
 
     def __init__(self, **kw: Any):
         super().__init__(**kw)
