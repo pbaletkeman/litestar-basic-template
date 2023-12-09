@@ -25,7 +25,7 @@ class Base(DeclarativeBase, AuditColumns):
                       and key not in json_exclude}
 
         for i in class_dict:
-            if 'time' in str(type(class_dict[i])):
+            if 'time' in str(type(class_dict[i])) or 'date' in str(type(class_dict[i])):
                 class_dict[i] = str(class_dict.get(i).isoformat(' '))  # format time and make it a str
 
         return class_dict

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Optional, List
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from model.book import BookDTO, BookCreate
+from model.book import BookDTO, BookCreate, BookUpdate
 
 if TYPE_CHECKING:
     pass
@@ -22,11 +22,11 @@ class Publisher(Base):
     sort_order: Mapped[int] = mapped_column(nullable=False, default=0, sort_order=1)
     name: Mapped[str] = mapped_column(String(length=30), nullable=False, sort_order=2)
 
-    books: Mapped[List["Book"]] = relationship(back_populates="publisher",
-                                               order_by="asc(Book.sort_order), asc(Book.name)",
-                                               primaryjoin="Publisher.id == Book.publisher_id",
-                                               lazy="selectin",
-                                               cascade="all, delete",
+    books: Mapped[List['Book']] = relationship(back_populates='publisher',
+                                               order_by='asc(Book.sort_order), asc(Book.name)',
+                                               primaryjoin='Publisher.id == Book.publisher_id',
+                                               lazy='selectin',
+                                               cascade='all, delete',
                                                )
 
     def __init__(self, **kw: Any):
@@ -36,18 +36,19 @@ class Publisher(Base):
 
 
 class PublisherDTO(BaseModel):
-    id: Optional[int]
+    id: int | None
+    books: Optional[List[BookDTO]] = None
     sort_order: Optional[int] = 0
-    books: Optional[List[BookCreate]] = None
     name: str
 
 
 class PublisherCreate(BaseModel):
     name: str
-    sort_order: Optional[int] = 0
     books: Optional[List[BookCreate]] = None
+    sort_order: Optional[int] = 0
+
 
 class PublisherUpdate(BaseModel):
     name: str
+    books: Optional[List[BookUpdate]] = None
     sort_order: Optional[int] = 0
-    books: Optional[List[BookDTO]] = None

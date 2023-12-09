@@ -16,6 +16,12 @@ class BookDTO(BaseModel):
     name: str
 
 
+class BookUpdate(BaseModel):
+    id: Optional[int] = None
+    sort_order: Optional[int] = 0
+    name: str
+
+
 class BookCreate(BaseModel):
     name: str
     sort_order: Optional[int] = 0
@@ -30,8 +36,8 @@ class Book(Base):
     sort_order: Mapped[int] = mapped_column(nullable=False, default=0, sort_order=1)
     name: Mapped[str] = mapped_column(String(length=30), nullable=False, sort_order=2)
 
-    publisher: Mapped["Publisher"] = relationship(back_populates="books",
-                                                  primaryjoin="Publisher.id == Book.publisher_id",
+    publisher: Mapped['Publisher'] = relationship(back_populates='books',
+                                                  primaryjoin='Publisher.id == Book.publisher_id',
                                                   )
 
     def __init__(self, **kw: Any):

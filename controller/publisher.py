@@ -16,7 +16,8 @@ from pydantic import TypeAdapter
 
 from controller.book import provide_book_repo, BookRepository
 from model.book import Book, BookDTO
-from model.publisher import Publisher, PublisherDTO, PublisherCreate
+from model.publisher import Publisher, PublisherDTO, PublisherCreate, PublisherUpdate
+from sqlalchemy import delete as sqlalchemy_delete
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
@@ -100,18 +101,18 @@ class PublisherController(Controller):
         """
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
-            books: list[BookDTO] | None = None
+            books: list[BookDTO] = []
             if 'books' in _data:
                 books = _data.pop('books')
 
-            pub = Publisher(**_data)
-            publisher_repo.session.add(pub)
+            publisher_data = Publisher(**_data)
+            publisher_repo.session.add(publisher_data)
             await publisher_repo.session.commit()
-            return_entity = pub.to_dict()
+            return_entity = publisher_data.to_dict()
 
             if books:
                 for b in books:
-                    b['publisher_id'] = pub.id
+                    b['publisher_id'] = publisher_data.id
                 book_items = await book_repo.add_many([Book(**b) for b in books])
                 await book_repo.session.commit()
                 return_entity['books'] = [b.to_dict() for b in book_items]
@@ -127,16 +128,107 @@ class PublisherController(Controller):
     async def update_publisher(
             self,
             publisher_repo: PublisherRepository,
-            data: PublisherCreate,
-            publisher_id: int = Parameter(title='Publisher Id', description='The publisher to update.', ),
-    ) -> PublisherCreate:
-        """Update an."""
+            book_repo: BookRepository,
+            data: PublisherUpdate,
+            publisher_id: int = Parameter(title='Publisher Id', description='Update Publisher & Books', ),
+    ) -> PublisherUpdate:
+        pass
+
+    @route('/pub-and-book/{publisher_id:int}',
+           http_method=[HttpMethod.PUT, HttpMethod.PATCH],
+           tags=publisher_controller_tag)
+    async def update_publisher_and_books(
+            self,
+            publisher_repo: PublisherRepository,
+            book_repo: BookRepository,
+            data: PublisherUpdate,
+            publisher_id: int = Parameter(title='Publisher Id', description='Update Publisher & Books', ),
+    ) -> PublisherUpdate:
+        """Update a publisher and their books.
+        Handle with care.
+        If the books are not listed then they are deleted."""
+
+        """        
+{
+    "sort_order": 3,
+    "books": [
+        {
+            "id": 12,
+            "sort_order": 10,
+            "name": "bookName4"
+        },
+        {
+            "id": 10,
+            "sort_order": 50,
+            "name": "bookName2"
+        },
+        {
+            "sort_order": 5,
+            "name": "new_bookName"
+        }
+    ],
+    "name": "new_pub_name"
+}
+
+{
+    "sort_order": 3,
+    "books": [],
+    "name": "new_pub_name"
+}
+
+        """
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': publisher_id})
-            obj = await publisher_repo.update(Publisher(**_data))
+
+            books: list[BookDTO] = []
+            keep_books: list[int] = []
+            if 'books' in _data:
+                books = _data.pop('books')
+                new_books: list[BookDTO] = []
+                update_books: list[BookDTO] = []
+                for b in books:
+                    b.update({'publisher_id': publisher_id})
+                    book_id = b.get('id')
+                    if book_id:
+                        keep_books.append(book_id)
+                        update_books.append(b)
+                    else:
+                        new_books.append(b)
+                books = []
+                if update_books:
+                    book_items = await book_repo.update_many([Book(**b) for b in update_books])
+                    books = [b.to_dict() for b in book_items]
+                if new_books:
+                    book_items = await book_repo.add_many([Book(**b) for b in new_books])
+                    for b in book_items:
+                        keep_books.append(b.id)
+                    books = books + [b.to_dict() for b in book_items]
+                await book_repo.session.commit()
+
+                # return_entity['books'] = [b.to_dict() for b in book_items]
+
+            delete_sql: sqlalchemy_delete
+            if keep_books:
+                delete_sql = (
+                    sqlalchemy_delete(Book)
+                    .where(Book.publisher_id == publisher_id)
+                    .where(Book.id.notin_(keep_books))
+                )
+            else:
+                delete_sql = (
+                    sqlalchemy_delete(Book)
+                    .where(Book.publisher_id == publisher_id)
+                )
+            # await book_repo.session.execute(delete_sql)
+            # await book_repo.session.commit()
+
+            pub = Publisher(**_data)
+            await publisher_repo.update(pub)
             await publisher_repo.session.commit()
-            return PublisherCreate.model_validate(obj)
+            return_entity = pub.to_dict()
+
+            return keep_books
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
