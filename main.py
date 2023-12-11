@@ -58,9 +58,6 @@ def index_test() -> Template:
     return Template(template_name='test.html.mako')
 
 
-# x = OpenAPIController()
-# x.favicon_url
-
 app = Litestar(
     route_handlers=[
         PublisherController,

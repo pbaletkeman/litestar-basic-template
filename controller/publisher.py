@@ -16,7 +16,8 @@ from pydantic import TypeAdapter
 
 from controller.book import provide_book_repo, BookRepository
 from model.book import Book, BookDTO
-from model.publisher import Publisher, PublisherDTO, PublisherCreate, PublisherUpdate, PublisherDTOWithTotalCount
+from model.publisher import Publisher, PublisherDTO, PublisherCreateWithBooks, PublisherUpdate, \
+    PublisherDTOWithTotalCount, PublisherCreate
 from sqlalchemy import delete as sqlalchemy_delete
 
 if TYPE_CHECKING:
@@ -102,6 +103,17 @@ class PublisherController(Controller):
                                publisher_repo: PublisherRepository,
                                book_repo: BookRepository,
                                data: PublisherCreate, ) -> PublisherDTO:
+        try:
+            return await self.create_publisher_helper(book_repo, data, publisher_repo)
+
+        except Exception as ex:
+            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
+    @post('/with-books', tags=publisher_controller_tag)
+    async def create_publisher_with_books(self,
+                                          publisher_repo: PublisherRepository,
+                                          book_repo: BookRepository,
+                                          data: PublisherCreateWithBooks, ) -> PublisherDTO:
         """Create a new ."""
         """
         {
@@ -116,27 +128,27 @@ class PublisherController(Controller):
         }
         """
         try:
-            _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
-            books: list[BookDTO] = []
-            if 'books' in _data:
-                books = _data.pop('books')
-
-            publisher_data = Publisher(**_data)
-            publisher_repo.session.add(publisher_data)
-            await publisher_repo.session.commit()
-            return_entity = publisher_data.to_dict()
-
-            if books:
-                for b in books:
-                    b['publisher_id'] = publisher_data.id
-                book_items = await book_repo.add_many([Book(**b) for b in books])
-                await book_repo.session.commit()
-                return_entity['books'] = [b.to_dict() for b in book_items]
-
-            return PublisherDTO.model_validate(return_entity)
+            return await self.create_publisher_helper(book_repo, data, publisher_repo)
 
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
+    async def create_publisher_helper(self, book_repo, data, publisher_repo):
+        _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
+        books: list[BookDTO] = []
+        if 'books' in _data:
+            books = _data.pop('books')
+        publisher_data = Publisher(**_data)
+        publisher_repo.session.add(publisher_data)
+        await publisher_repo.session.commit()
+        return_entity = publisher_data.to_dict()
+        if books:
+            for b in books:
+                b['publisher_id'] = publisher_data.id
+            book_items = await book_repo.add_many([Book(**b) for b in books])
+            await book_repo.session.commit()
+            return_entity['books'] = [b.to_dict() for b in book_items]
+        return PublisherDTO.model_validate(return_entity)
 
     @route('/{publisher_id:int}',
            http_method=[HttpMethod.PUT, HttpMethod.PATCH],

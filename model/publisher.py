@@ -49,6 +49,11 @@ class PublisherDTO(BaseModel):
 
 class PublisherCreate(BaseModel):
     name: str
+    sort_order: Optional[int] = 0
+
+
+class PublisherCreateWithBooks(BaseModel):
+    name: str
     books: Optional[List[BookCreate]] = None
     sort_order: Optional[int] = 0
 
