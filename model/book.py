@@ -6,11 +6,10 @@ from sqlalchemy import String, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from model.base import BaseModel, Base
-# from model.publisher import Publisher
 
 
 class BookDTOWithTotalCount(BaseModel):
-    books: Optional[BookDTO] = None
+    books: Optional[list[BookDTO]] = None
     total: int = 0
 
 

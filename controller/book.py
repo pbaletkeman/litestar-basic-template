@@ -48,16 +48,13 @@ class BookController(Controller):
             self,
             book_repo: BookRepository,
     ) -> BookDTOWithTotalCount:
-        """List book records (paginated)."""
+        """List all book records."""
         try:
             order_by1 = OrderBy(field_name=Book.sort_order)
             order_by2 = OrderBy(field_name=Book.name)
             results, total = await book_repo.list_and_count(order_by1, order_by2)
             type_adapter = TypeAdapter(list[BookDTO])
-            return_value = BookDTOWithTotalCount()
-            return_value.books = type_adapter.validate_python(results)
-            return_value.total = total
-            return return_value
+            return BookDTOWithTotalCount(books=type_adapter.validate_python(results), total=total)
 
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)

@@ -8,7 +8,7 @@ from typing_extensions import Self
 from advanced_alchemy.base import AuditColumns
 from pydantic import BaseModel as _BaseModel
 from sqlalchemy import String
-from sqlalchemy.orm import declarative_mixin, Mapped, mapped_column, DeclarativeBase, InstanceState
+from sqlalchemy.orm import declarative_mixin, Mapped, mapped_column, DeclarativeBase
 
 
 def is_pydantic(obj: object):
