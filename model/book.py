@@ -15,8 +15,8 @@ class BookDTOWithTotalCount(BaseModel):
 
 class BookDTO(BaseModel):
     id: Optional[int]
-    sort_order: Optional[int] = 0
     publisher_id: int
+    sort_order: Optional[int] = 0
     name: str
 
 

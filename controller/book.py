@@ -43,24 +43,8 @@ class BookController(Controller):
     }
     book_controller_tag = ['Book - CRUD']
 
-    @get('/all', tags=book_controller_tag)
-    async def list_all_books(
-            self,
-            book_repo: BookRepository,
-    ) -> BookDTOWithTotalCount:
-        """List all book records."""
-        try:
-            order_by1 = OrderBy(field_name=Book.sort_order)
-            order_by2 = OrderBy(field_name=Book.name)
-            results, total = await book_repo.list_and_count(order_by1, order_by2)
-            type_adapter = TypeAdapter(list[BookDTO])
-            return BookDTOWithTotalCount(books=type_adapter.validate_python(results), total=total)
-
-        except Exception as ex:
-            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
-
     @get(tags=book_controller_tag)
-    async def list_book(
+    async def list_books(
             self,
             book_repo: BookRepository,
             limit_offset: LimitOffset,
@@ -77,6 +61,22 @@ class BookController(Controller):
                 limit=limit_offset.limit,
                 offset=limit_offset.offset,
             )
+        except Exception as ex:
+            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
+    @get('/all', tags=book_controller_tag)
+    async def list_all_books(
+            self,
+            book_repo: BookRepository,
+    ) -> BookDTOWithTotalCount:
+        """List all book records."""
+        try:
+            order_by1 = OrderBy(field_name=Book.sort_order)
+            order_by2 = OrderBy(field_name=Book.name)
+            results, total = await book_repo.list_and_count(order_by1, order_by2)
+            type_adapter = TypeAdapter(list[BookDTO])
+            return BookDTOWithTotalCount(books=type_adapter.validate_python(results), total=total)
+
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
@@ -125,31 +125,16 @@ class BookController(Controller):
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
-    @delete('/{book_id:int}', tags=book_controller_tag)
-    async def delete_book(
+    @delete('/{book_ids:str}', tags=book_controller_tag)
+    async def delete_books(
             self,
             book_repo: BookRepository,
-            book_id: int = Parameter(title='Book Id',
-                                     description='The id meta data tag to delete.', ),
+            book_ids: str = Parameter(title='List Of Book Ids',
+                                      description='Comma Separated Of The Ids For Books To Delete.', ),
     ) -> None:
-        """Delete a single book record from the system."""
+        """Delete book records from the system."""
         try:
-            _ = await book_repo.delete(book_id)
-            await book_repo.session.commit()
-        except Exception as ex:
-            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
-
-    @delete('/delete-many/{book_ids:str}', tags=book_controller_tag)
-    async def delete_many_books(
-            self,
-            book_repo: BookRepository,
-            book_ids: str = Parameter(title='Comma Separated List Of Book Ids',
-                                      description='The ids of books to delete.', ),
-    ) -> None:
-        """Delete many book records from the system."""
-        try:
-            delete_ids: list[int] = [int(i) for i in book_ids.split(',')]
-            _ = await book_repo.delete_many(delete_ids)
+            _ = await book_repo.delete_many([int(i) for i in book_ids.split(',')])
             await book_repo.session.commit()
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
