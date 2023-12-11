@@ -16,7 +16,7 @@ from pydantic import TypeAdapter
 
 from controller.book import provide_book_repo, BookRepository
 from model.book import Book, BookDTO
-from model.publisher import Publisher, PublisherDTO, PublisherCreate, PublisherUpdate
+from model.publisher import Publisher, PublisherDTO, PublisherCreate, PublisherUpdate, PublisherDTOWithTotalCount
 from sqlalchemy import delete as sqlalchemy_delete
 
 if TYPE_CHECKING:
@@ -48,7 +48,7 @@ class PublisherController(Controller):
     publisher_controller_tag = ['Publisher - CRUD']
 
     @get(tags=publisher_controller_tag)
-    async def list_publisher(
+    async def list_publishers(
             self,
             publisher_repo: PublisherRepository,
             limit_offset: LimitOffset,
@@ -65,6 +65,22 @@ class PublisherController(Controller):
                 limit=limit_offset.limit,
                 offset=limit_offset.offset,
             )
+        except Exception as ex:
+            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
+    @get('/all', tags=publisher_controller_tag)
+    async def list_all_publishers(
+            self,
+            publisher_repo: PublisherRepository,
+    ) -> PublisherDTOWithTotalCount:
+        """List items."""
+        try:
+            order_by1 = OrderBy(field_name=Publisher.sort_order)
+            order_by2 = OrderBy(field_name=Publisher.name)
+            results, total = await publisher_repo.list_and_count(order_by1, order_by2, )
+            type_adapter = TypeAdapter(list[PublisherDTO])
+            return PublisherDTOWithTotalCount(publishers=type_adapter.validate_python(results), total=total)
+
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
@@ -237,17 +253,16 @@ Examples:
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
-    @delete('/{publisher_id:int}', tags=publisher_controller_tag)
-    async def delete_publisher(
+    @delete('/{publisher_ids:str}', tags=publisher_controller_tag)
+    async def delete_publishers(
             self,
             publisher_repo: PublisherRepository,
-            publisher_id: int = Parameter(title='Publisher Id',
-                                          description='The item to delete.', ),
+            publisher_ids: str = Parameter(title='List Of Publisher Ids',
+                                           description='Comma Separated Of The Ids The Publishers To Delete.', ),
     ) -> None:
-        """## Delete
-          from the system."""
+        """Delete publishers and their books from the system."""
         try:
-            _ = await publisher_repo.delete(publisher_id)
+            _ = await publisher_repo.delete([int(i) for i in publisher_ids.split(',')])
             await publisher_repo.session.commit()
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)

@@ -35,6 +35,11 @@ class Publisher(Base):
             self.sort_order = 0
 
 
+class PublisherDTOWithTotalCount(BaseModel):
+    publishers: Optional[list[PublisherDTO]] = None
+    total: int = 0
+
+
 class PublisherDTO(BaseModel):
     id: int | None
     books: Optional[List[BookDTO]] = None
