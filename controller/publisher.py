@@ -130,7 +130,7 @@ class PublisherController(Controller):
             publisher_repo: PublisherRepository,
             book_repo: BookRepository,
             data: PublisherUpdate,
-            publisher_id: int = Parameter(title='Publisher Id', description='Update Publisher & Books', ),
+            publisher_id: int = Parameter(title='Publisher Id', description='Publisher Primary Key', ),
     ) -> PublisherUpdate:
         pass
 
@@ -142,13 +142,16 @@ class PublisherController(Controller):
             publisher_repo: PublisherRepository,
             book_repo: BookRepository,
             data: PublisherUpdate,
-            publisher_id: int = Parameter(title='Publisher Id', description='Update Publisher & Books', ),
+            publisher_id: int = Parameter(title='Publisher Id', description='Publisher Primary Key', ),
     ) -> PublisherUpdate:
-        """Update a publisher and their books.
-        Handle with care.
-        If the books are not listed then they are deleted."""
+        """### Update a publisher and their books.
 
-        """        
+        Handle with care.
+
+        If the books are not listed then they are deleted.
+```
+Examples:
+==============================
 {
     "sort_order": 3,
     "books": [
@@ -169,18 +172,19 @@ class PublisherController(Controller):
     ],
     "name": "new_pub_name"
 }
-
+==============================
 {
     "sort_order": 3,
     "books": [],
     "name": "new_pub_name"
 }
-
+```
         """
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': publisher_id})
-
+            return_entity: dict[str, dict[str, list[str]]] = {}
+            book_entity: dict[str, list[str]] = {}
             books: list[BookDTO] = []
             keep_books: list[int] = []
             if 'books' in _data:
@@ -198,15 +202,15 @@ class PublisherController(Controller):
                 books = []
                 if update_books:
                     book_items = await book_repo.update_many([Book(**b) for b in update_books])
-                    books = [b.to_dict() for b in book_items]
+                    books = book_items
                 if new_books:
                     book_items = await book_repo.add_many([Book(**b) for b in new_books])
                     for b in book_items:
                         keep_books.append(b.id)
-                    books = books + [b.to_dict() for b in book_items]
+                    books = books + book_items
                 await book_repo.session.commit()
 
-                # return_entity['books'] = [b.to_dict() for b in book_items]
+                book_entity['books'] = [b.to_dict() for b in books]
 
             delete_sql: sqlalchemy_delete
             if keep_books:
@@ -220,15 +224,16 @@ class PublisherController(Controller):
                     sqlalchemy_delete(Book)
                     .where(Book.publisher_id == publisher_id)
                 )
-            # await book_repo.session.execute(delete_sql)
-            # await book_repo.session.commit()
+            await book_repo.session.execute(delete_sql)
+            await book_repo.session.commit()
 
             pub = Publisher(**_data)
             await publisher_repo.update(pub)
             await publisher_repo.session.commit()
             return_entity = pub.to_dict()
+            return_entity['books'] = book_entity
 
-            return keep_books
+            return PublisherUpdate.model_validate(return_entity)
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
