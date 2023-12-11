@@ -9,6 +9,11 @@ from model.base import BaseModel, Base
 # from model.publisher import Publisher
 
 
+class BookDTOWithTotalCount(BaseModel):
+    books: Optional[BookDTO] = None
+    total: int = 0
+
+
 class BookDTO(BaseModel):
     id: Optional[int]
     sort_order: Optional[int] = 0
@@ -24,6 +29,7 @@ class BookUpdate(BaseModel):
 
 class BookCreate(BaseModel):
     name: str
+    publisher_id: int
     sort_order: Optional[int] = 0
 
 
