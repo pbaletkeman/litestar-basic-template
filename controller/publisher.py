@@ -267,7 +267,7 @@ Examples:
             return_entity = pub.to_dict()
             return_entity['books'] = book_entity.get('books')
 
-            return PublisherUpdateWithBooks.model_validate(return_entity)
+            return PublisherDTO.model_validate(return_entity)
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
