@@ -16,8 +16,8 @@ from pydantic import TypeAdapter
 
 from controller.book import provide_book_repo, BookRepository
 from model.book import Book, BookDTO
-from model.publisher import Publisher, PublisherDTO, PublisherCreateWithBooks, PublisherUpdate, \
-    PublisherDTOWithTotalCount, PublisherCreate
+from model.publisher import Publisher, PublisherDTO, PublisherCreateWithBooks, PublisherUpdateWithBooks, \
+    PublisherDTOWithTotalCount, PublisherCreate, PublisherUpdate
 from sqlalchemy import delete as sqlalchemy_delete
 
 if TYPE_CHECKING:
@@ -156,11 +156,17 @@ class PublisherController(Controller):
     async def update_publisher(
             self,
             publisher_repo: PublisherRepository,
-            book_repo: BookRepository,
             data: PublisherUpdate,
             publisher_id: int = Parameter(title='Publisher Id', description='Publisher Primary Key', ),
-    ) -> PublisherUpdate:
-        pass
+    ) -> PublisherDTO:
+        try:
+            _data = data.model_dump(exclude_unset=True, exclude_none=True)
+            _data.update({'id': publisher_id})
+            obj = await publisher_repo.update(Publisher(**_data))
+            await publisher_repo.session.commit()
+            return PublisherDTO.model_validate(obj)
+        except Exception as ex:
+            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
     @route('/pub-and-book/{publisher_id:int}',
            http_method=[HttpMethod.PUT, HttpMethod.PATCH],
@@ -169,9 +175,9 @@ class PublisherController(Controller):
             self,
             publisher_repo: PublisherRepository,
             book_repo: BookRepository,
-            data: PublisherUpdate,
+            data: PublisherUpdateWithBooks,
             publisher_id: int = Parameter(title='Publisher Id', description='Publisher Primary Key', ),
-    ) -> PublisherUpdate:
+    ) -> PublisherDTO:
         """### Update a publisher and their books.
 
         Handle with care.
@@ -261,7 +267,7 @@ Examples:
             return_entity = pub.to_dict()
             return_entity['books'] = book_entity
 
-            return PublisherUpdate.model_validate(return_entity)
+            return PublisherUpdateWithBooks.model_validate(return_entity)
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 

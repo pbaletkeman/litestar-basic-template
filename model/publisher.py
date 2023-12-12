@@ -58,7 +58,12 @@ class PublisherCreateWithBooks(BaseModel):
     sort_order: Optional[int] = 0
 
 
-class PublisherUpdate(BaseModel):
+class PublisherUpdateWithBooks(BaseModel):
     name: str
     books: Optional[List[BookUpdate]] = None
+    sort_order: Optional[int] = 0
+
+
+class PublisherUpdate(BaseModel):
+    name: str
     sort_order: Optional[int] = 0
