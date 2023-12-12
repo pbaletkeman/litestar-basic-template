@@ -32,11 +32,10 @@ class PublisherRepository(SQLAlchemyAsyncRepository[Publisher]):
     model_type = Publisher
 
 
-# we can optionally override the default `select` used for the repository to pass in
-# specific SQL options such as join details
 async def provide_publisher_repo(db_session: AsyncSession) -> PublisherRepository:
-    """This provides a simple example demonstrating how to override the join options
-    for the repository."""
+    # we can optionally override the default `select` used for the repository to pass in
+    # specific SQL options such as join details
+    """This provides a simple example of a repository."""
     return PublisherRepository(session=db_session)
 
 
@@ -54,7 +53,7 @@ class PublisherController(Controller):
             publisher_repo: PublisherRepository,
             limit_offset: LimitOffset,
     ) -> OffsetPagination[PublisherDTO]:
-        """List items."""
+        """List Publisher Records (Paginated) With Books."""
         try:
             order_by1 = OrderBy(field_name=Publisher.sort_order)
             order_by2 = OrderBy(field_name=Publisher.name)
@@ -74,7 +73,7 @@ class PublisherController(Controller):
             self,
             publisher_repo: PublisherRepository,
     ) -> PublisherDTOWithTotalCount:
-        """List items."""
+        """List Publisher Records With Books."""
         try:
             order_by1 = OrderBy(field_name=Publisher.sort_order)
             order_by2 = OrderBy(field_name=Publisher.name)
@@ -89,9 +88,9 @@ class PublisherController(Controller):
     async def get_publisher_details(self,
                                     publisher_repo: PublisherRepository,
                                     publisher_id: int = Parameter(title='Publisher Id',
-                                                                  description='The publisher to update.', ),
+                                                                  description='The Publisher To Update.', ),
                                     ) -> PublisherDTO:
-        """Interact with SQLAlchemy engine and session."""
+        """Get Single Publisher Records With Book Records."""
         try:
             obj = await publisher_repo.get_one(id=publisher_id)
             return PublisherDTO.model_validate(obj)
@@ -114,8 +113,10 @@ class PublisherController(Controller):
                                           publisher_repo: PublisherRepository,
                                           book_repo: BookRepository,
                                           data: PublisherCreateWithBooks, ) -> PublisherDTO:
-        """Create a new ."""
-        """
+        """Create A New Publisher With Books.
+        ```
+        Examples
+        ====================
         {
           "name": "pubName",
           "sort_order": 5,
@@ -126,6 +127,7 @@ class PublisherController(Controller):
               {"name": "bookName4", "sort_order": 10}
           ]
         }
+        ```
         """
         try:
             return await self.create_publisher_helper(book_repo, data, publisher_repo)
@@ -134,6 +136,7 @@ class PublisherController(Controller):
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
     async def create_publisher_helper(self, book_repo, data, publisher_repo):
+        """Main Body To Create A Publisher."""
         _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
         books: list[BookDTO] = []
         if 'books' in _data:
@@ -159,6 +162,7 @@ class PublisherController(Controller):
             data: PublisherUpdate,
             publisher_id: int = Parameter(title='Publisher Id', description='Publisher Primary Key', ),
     ) -> PublisherDTO:
+        """Update A Publisher Record."""
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': publisher_id})
@@ -168,7 +172,7 @@ class PublisherController(Controller):
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
-    @route('/pub-and-book/{publisher_id:int}',
+    @route('/pub-and-books/{publisher_id:int}',
            http_method=[HttpMethod.PUT, HttpMethod.PATCH],
            tags=publisher_controller_tag)
     async def update_publisher_and_books(
@@ -178,9 +182,9 @@ class PublisherController(Controller):
             data: PublisherUpdateWithBooks,
             publisher_id: int = Parameter(title='Publisher Id', description='Publisher Primary Key', ),
     ) -> PublisherDTO:
-        """### Update a publisher and their books.
+        """#### Update A Publisher And Their Books.
 
-        Handle with care.
+        **Handle with care.**
 
         If the books are not listed then they are deleted.
 ```
@@ -217,9 +221,7 @@ Examples:
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': publisher_id})
-            return_entity: dict[str, dict[str, list[str]]] = {}
             book_entity: dict[str, list[str]] = {}
-            books: list[BookDTO] = []
             keep_books: list[int] = []
             if 'books' in _data:
                 books = _data.pop('books')
@@ -246,30 +248,34 @@ Examples:
 
                 book_entity['books'] = [b.to_dict() for b in books]
 
-            delete_sql: sqlalchemy_delete
-            if keep_books:
-                delete_sql = (
-                    sqlalchemy_delete(Book)
-                    .where(Book.publisher_id == publisher_id)
-                    .where(Book.id.notin_(keep_books))
-                )
-            else:
-                delete_sql = (
-                    sqlalchemy_delete(Book)
-                    .where(Book.publisher_id == publisher_id)
-                )
-            await book_repo.session.execute(delete_sql)
-            await book_repo.session.commit()
+            await self.update_helper(book_repo, keep_books, publisher_id)
 
-            pub = Publisher(**_data)
-            await publisher_repo.update(pub)
+            publisher_record = Publisher(**_data)
+            await publisher_repo.update(publisher_record)
             await publisher_repo.session.commit()
-            return_entity = pub.to_dict()
+            return_entity = publisher_record.to_dict()
             return_entity['books'] = book_entity.get('books')
 
             return PublisherDTO.model_validate(return_entity)
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
+    async def update_helper(self, book_repo, keep_books, publisher_id):
+        """Delete Books Not Supplied In The Update."""
+        delete_sql: sqlalchemy_delete
+        if keep_books:
+            delete_sql = (
+                sqlalchemy_delete(Book)
+                .where(Book.publisher_id == publisher_id)
+                .where(Book.id.notin_(keep_books))
+            )
+        else:
+            delete_sql = (
+                sqlalchemy_delete(Book)
+                .where(Book.publisher_id == publisher_id)
+            )
+        await book_repo.session.execute(delete_sql)
+        await book_repo.session.commit()
 
     @delete('/{publisher_ids:str}', tags=publisher_controller_tag)
     async def delete_publishers(
@@ -278,7 +284,7 @@ Examples:
             publisher_ids: str = Parameter(title='List Of Publisher Ids',
                                            description='Comma Separated Of The Ids The Publishers To Delete.', ),
     ) -> None:
-        """Delete publishers and their books from the system."""
+        """Delete Publishers And Their Books From The System."""
         try:
             _ = await publisher_repo.delete([int(i) for i in publisher_ids.split(',')])
             await publisher_repo.session.commit()

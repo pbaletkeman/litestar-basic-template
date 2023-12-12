@@ -28,11 +28,10 @@ class BookRepository(SQLAlchemyAsyncRepository[Book]):
     model_type = Book
 
 
-# we can optionally override the default `select` used for the repository to pass in
-# specific SQL options such as join details
 async def provide_book_repo(db_session: AsyncSession) -> BookRepository:
-    """This provides a simple example demonstrating how to override the join options
-    for the repository."""
+    # we can optionally override the default `select` used for the repository to pass in
+    # specific SQL options such as join details
+    """This provides a simple example a repository."""
     return BookRepository(session=db_session)
 
 
@@ -49,7 +48,7 @@ class BookController(Controller):
             book_repo: BookRepository,
             limit_offset: LimitOffset,
     ) -> OffsetPagination[BookDTO]:
-        """List book records (paginated)."""
+        """List Book Records (Paginated)."""
         try:
             order_by1 = OrderBy(field_name=Book.sort_order)
             order_by2 = OrderBy(field_name=Book.name)
@@ -69,7 +68,7 @@ class BookController(Controller):
             self,
             book_repo: BookRepository,
     ) -> BookDTOWithTotalCount:
-        """List all book records."""
+        """List All Book Records."""
         try:
             order_by1 = OrderBy(field_name=Book.sort_order)
             order_by2 = OrderBy(field_name=Book.name)
@@ -84,9 +83,9 @@ class BookController(Controller):
     async def get_book_details(self,
                                book_repo: BookRepository,
                                book_id: int = Parameter(title='Book Id',
-                                                        description='The book to update.', ),
+                                                        description='The Book To Update.', ),
                                ) -> BookDTO:
-        """Get all the details for a single book record."""
+        """Get All The Details For A Single Book Record."""
         try:
             obj = await book_repo.get_one(id=book_id)
             return BookDTO.model_validate(obj)
@@ -96,10 +95,9 @@ class BookController(Controller):
     @post(tags=book_controller_tag)
     async def create_book(self, book_repo: BookRepository,
                           data: BookCreate, ) -> BookDTO:
-        """Create a new book record."""
+        """Create A New Book Record."""
         try:
             _data = data.model_dump(exclude_unset=True, by_alias=False, exclude_none=True)
-            # _data["slug"] = await book_repo.get_available_slug(_data["name"])
             obj = await book_repo.add(Book(**_data))
             await book_repo.session.commit()
             return BookDTO.model_validate(obj)
@@ -109,7 +107,7 @@ class BookController(Controller):
     @post('/bulk-add', tags=book_controller_tag)
     async def bulk_create_book(self, book_repo: BookRepository,
                                data: list[BookCreate], ) -> list[BookDTO]:
-        """Create many book records."""
+        """Create Many Book Records."""
         try:
             _data = [b.model_dump(exclude_unset=True, by_alias=False, exclude_none=True) for b in data]
             obj = await book_repo.add_many([Book(**b) for b in _data])
@@ -125,9 +123,9 @@ class BookController(Controller):
             self,
             book_repo: BookRepository,
             data: BookCreate,
-            book_id: int = Parameter(title='Book Id', description='The book to update.', ),
+            book_id: int = Parameter(title='Book Id', description='The Book To Update.', ),
     ) -> BookDTO:
-        """Update a book record"""
+        """Update A Book Record"""
         try:
             _data = data.model_dump(exclude_unset=True, exclude_none=True)
             _data.update({'id': book_id})
@@ -144,7 +142,7 @@ class BookController(Controller):
             book_ids: str = Parameter(title='List Of Book Ids',
                                       description='Comma Separated Of The Ids For Books To Delete.', ),
     ) -> None:
-        """Delete book records from the system."""
+        """Delete Book Records From The System."""
         try:
             _ = await book_repo.delete_many([int(i) for i in book_ids.split(',')])
             await book_repo.session.commit()
