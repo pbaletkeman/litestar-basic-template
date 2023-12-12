@@ -106,6 +106,18 @@ class BookController(Controller):
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 
+    @post('/bulk-add', tags=book_controller_tag)
+    async def bulk_create_book(self, book_repo: BookRepository,
+                               data: list[BookCreate], ) -> list[BookDTO]:
+        """Create many book records."""
+        try:
+            _data = [b.model_dump(exclude_unset=True, by_alias=False, exclude_none=True) for b in data]
+            obj = await book_repo.add_many([Book(**b) for b in _data])
+            await book_repo.session.commit()
+            return [BookDTO.model_validate(b) for b in obj]
+        except Exception as ex:
+            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
     @route('/{book_id:int}',
            http_method=[HttpMethod.PUT, HttpMethod.PATCH],
            tags=book_controller_tag)
