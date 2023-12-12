@@ -54,7 +54,7 @@ class PublisherCreate(BaseModel):
 
 class PublisherCreateWithBooks(BaseModel):
     name: str
-    books: Optional[List[BookCreate]] = None
+    books: Optional[List[BookUpdate]] = None
     sort_order: Optional[int] = 0
 
 

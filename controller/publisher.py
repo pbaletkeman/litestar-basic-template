@@ -265,7 +265,7 @@ Examples:
             await publisher_repo.update(pub)
             await publisher_repo.session.commit()
             return_entity = pub.to_dict()
-            return_entity['books'] = book_entity
+            return_entity['books'] = book_entity.get('books')
 
             return PublisherUpdateWithBooks.model_validate(return_entity)
         except Exception as ex:
