@@ -13,4 +13,8 @@ Sample Python 3.11.7 project which uses [Litestar](http://litestar.dev) - http:/
 - Option 2 - execute `litestar --app main:app run --debug` from the terminal
 - Option 3 - execute `uvicorn main:app` from the terminal
 - Option 4 - execute `uvicorn main:app --log-config=log_config.yml` from the terminal
-
+- #### Endpoint Documentation:
+  - /docs/elements
+  - /docs/rapidoc
+  - /docs/redoc
+  - /docs/swagger
