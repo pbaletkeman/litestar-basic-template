@@ -102,6 +102,7 @@ class PublisherController(Controller):
                                publisher_repo: PublisherRepository,
                                book_repo: BookRepository,
                                data: PublisherCreate, ) -> PublisherDTO:
+        """Create A Publisher Record."""
         try:
             return await self.create_publisher_helper(book_repo, data, publisher_repo)
 
@@ -113,7 +114,7 @@ class PublisherController(Controller):
                                           publisher_repo: PublisherRepository,
                                           book_repo: BookRepository,
                                           data: PublisherCreateWithBooks, ) -> PublisherDTO:
-        """Create A New Publisher With Books.
+        """Create A New Publisher Record With Books.
         ```
         Examples
         ====================
