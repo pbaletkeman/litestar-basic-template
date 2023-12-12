@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Type
 
 from litestar import Litestar, get
 from litestar.config.compression import CompressionConfig
@@ -11,6 +11,7 @@ from litestar.contrib.mako import MakoTemplateEngine
 from litestar.contrib.sqlalchemy.plugins import AsyncSessionConfig, SQLAlchemyAsyncConfig, SQLAlchemyInitPlugin
 from litestar.di import Provide
 from litestar.openapi import OpenAPIConfig, OpenAPIController
+from litestar.static_files import StaticFilesConfig
 from litestar.template.config import TemplateConfig
 from litestar.response import Template
 
@@ -58,6 +59,10 @@ def index_test() -> Template:
     return Template(template_name='test.html.mako')
 
 
+class OpenAPIControllerExtra(OpenAPIController):
+    favicon_url = 'static-files/favicon.ico'
+
+
 app = Litestar(
     route_handlers=[
         PublisherController,
@@ -69,11 +74,13 @@ app = Litestar(
         root_schema_site='elements',  # swagger, elements, redoc, rapidoc
         path='/docs',
         create_examples=False,
+        openapi_controller=OpenAPIControllerExtra,
         use_handler_docstrings=True,
     ),
-    exception_handlers={
-        # exceptions.ApplicationError: exceptions.exception_to_http_response,
-    },
+    static_files_config=[StaticFilesConfig(
+        path='static-files',
+        directories=['static-files']
+    )],
     template_config=TemplateConfig(
         directory=Path('templates'),
         engine=MakoTemplateEngine,
