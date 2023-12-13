@@ -17,7 +17,7 @@ from pydantic import TypeAdapter
 from controller.book import provide_book_repo, BookRepository
 from model.book import Book, BookDTO
 from model.publisher import Publisher, PublisherDTO, PublisherCreateWithBooks, PublisherUpdateWithBooks, \
-    PublisherDTOWithTotalCount, PublisherCreate, PublisherUpdate
+    PublisherDTOWithTotalCount, PublisherCreate, PublisherUpdate, PublisherIDName
 from sqlalchemy import delete as sqlalchemy_delete
 
 if TYPE_CHECKING:
@@ -65,6 +65,21 @@ class PublisherController(Controller):
                 limit=limit_offset.limit,
                 offset=limit_offset.offset,
             )
+        except Exception as ex:
+            raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
+
+    @get('/ids-and-names', tags=publisher_controller_tag)
+    async def list_publishers_id_name(
+            self,
+            publisher_repo: PublisherRepository,
+    ) -> list[PublisherIDName]:
+        """List Publisher ID And Names."""
+        try:
+            order_by1 = OrderBy(field_name=Publisher.sort_order)
+            order_by2 = OrderBy(field_name=Publisher.name)
+            results = await publisher_repo.list(order_by1, order_by2, )
+            return [PublisherIDName.model_validate(r) for r in results]
+
         except Exception as ex:
             raise HTTPException(detail=str(ex), status_code=status_codes.HTTP_404_NOT_FOUND)
 

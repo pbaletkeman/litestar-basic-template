@@ -47,6 +47,11 @@ class PublisherDTO(BaseModel):
     name: str
 
 
+class PublisherIDName(BaseModel):
+    id: int
+    name: str
+
+
 class PublisherCreate(BaseModel):
     name: str
     sort_order: Optional[int] = 0
