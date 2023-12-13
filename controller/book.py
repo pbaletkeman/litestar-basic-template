@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from litestar.exceptions import HTTPException
 from litestar import status_codes
 from advanced_alchemy import SQLAlchemyAsyncRepository
@@ -47,12 +47,17 @@ class BookController(Controller):
             self,
             book_repo: BookRepository,
             limit_offset: LimitOffset,
+            publisher_id: Optional[int] = None
     ) -> OffsetPagination[BookDTO]:
         """List Book Records (Paginated)."""
         try:
             order_by1 = OrderBy(field_name=Book.sort_order)
             order_by2 = OrderBy(field_name=Book.name)
-            results, total = await book_repo.list_and_count(limit_offset, order_by1, order_by2)
+            if publisher_id:
+                results, total = await book_repo.list_and_count(limit_offset, order_by1, order_by2,
+                                                                publisher_id=publisher_id)
+            else:
+                results, total = await book_repo.list_and_count(limit_offset, order_by1, order_by2)
             type_adapter = TypeAdapter(list[BookDTO])
             return OffsetPagination[BookDTO](
                 items=type_adapter.validate_python(results),
@@ -67,12 +72,16 @@ class BookController(Controller):
     async def list_all_books(
             self,
             book_repo: BookRepository,
+            publisher_id: Optional[int] = None
     ) -> BookDTOWithTotalCount:
         """List All Book Records."""
         try:
             order_by1 = OrderBy(field_name=Book.sort_order)
             order_by2 = OrderBy(field_name=Book.name)
-            results, total = await book_repo.list_and_count(order_by1, order_by2)
+            if publisher_id:
+                results, total = await book_repo.list_and_count(order_by1, order_by2, publisher_id=publisher_id)
+            else:
+                results, total = await book_repo.list_and_count(order_by1, order_by2)
             type_adapter = TypeAdapter(list[BookDTO])
             return BookDTOWithTotalCount(books=type_adapter.validate_python(results), total=total)
 
