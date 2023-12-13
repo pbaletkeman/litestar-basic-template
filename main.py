@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Type
+from typing import TYPE_CHECKING, Type, Optional
 
 from litestar import Litestar, get
 from litestar.config.compression import CompressionConfig
@@ -50,7 +50,7 @@ async def on_startup() -> None:
 
 
 @get(path='/', sync_to_thread=False)
-def index(name: str) -> Template:
+def index(name: Optional[str]) -> Template:
     return Template(template_name='hello.mako.html', context={"name": name})
 
 
