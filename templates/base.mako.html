@@ -1,0 +1,26 @@
+<html xmlns="http://www.w3.org/1999/html">
+    <head>
+        <title>A Page Title</title>
+        <script src="https://unpkg.com/htmx.org@1.9.9"></script>
+    </head>
+    <body>
+        <main>
+            <header>
+                <%block name="header">
+                    <h2>
+                        <%block name="title"/>
+                    </h2>
+                </%block>
+            </header>
+            <article>
+                ${self.body()}
+            </article>
+
+            <footer>
+                <%block name="footer">
+                    this is the footer
+                </%block>
+            </footer>
+        </main>
+    </body>
+</html>

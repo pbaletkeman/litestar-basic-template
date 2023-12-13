@@ -51,12 +51,12 @@ async def on_startup() -> None:
 
 @get(path='/', sync_to_thread=False)
 def index(name: str) -> Template:
-    return Template(template_name='hello.html.mako', context={"name": name})
+    return Template(template_name='hello.mako.html', context={"name": name})
 
 
 @get(path='/test', sync_to_thread=False)
 def index_test() -> Template:
-    return Template(template_name='test.html.mako')
+    return Template(template_name='test.mako.html')
 
 
 class OpenAPIControllerExtra(OpenAPIController):
