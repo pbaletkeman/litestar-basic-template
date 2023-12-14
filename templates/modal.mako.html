@@ -1,0 +1,21 @@
+<button class="open" id="open_${rec_id}">open</button>
+<dialog class="dialog" id="record_${rec_id}">
+  Content here
+  ${rec_id}
+  <button class="close" id="close_${rec_id}">close</button>
+</dialog>
+
+<script>
+  const dialogElem${rec_id} = document.querySelector('#record_${rec_id}');
+  const closeBtn${rec_id} = document.querySelector('#close_${rec_id}');
+  const openBtn${rec_id} = document.querySelector('#open_${rec_id}');
+
+  closeBtn${rec_id}.addEventListener('click', () => {
+    dialogElem${rec_id}.close();
+  });
+
+  openBtn${rec_id}.addEventListener('click', () => {
+    dialogElem${rec_id}.showModal();
+  });
+  dialogElem${rec_id}.showModal();
+</script>

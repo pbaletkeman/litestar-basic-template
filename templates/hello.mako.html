@@ -15,5 +15,7 @@
 </%block>
 
 this is the body content.
-<button hx-get="/static-files/modal.html" hx-target="body" hx-swap="beforeend">Open a Modal</button>
-
+<br/>
+<button hx-get="/modal?rec_id=123" hx-swap="outerHTML">Open a Modal1</button>
+<br/>
+<button hx-get="/modal?rec_id=345" hx-swap="outerHTML">Open a Modal2</button>

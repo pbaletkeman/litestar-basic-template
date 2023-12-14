@@ -59,6 +59,11 @@ def index_test() -> Template:
     return Template(template_name='test.mako.html')
 
 
+@get(path='/modal', sync_to_thread=False)
+def modal(rec_id: Optional[str]) -> Template:
+    return Template(template_name='modal.mako.html', context={"rec_id": rec_id})
+
+
 class OpenAPIControllerExtra(OpenAPIController):
     favicon_url = 'static-files/favicon.ico'
 
@@ -67,7 +72,7 @@ app = Litestar(
     route_handlers=[
         PublisherController,
         BookController,
-        index, index_test
+        index, index_test, modal
     ],
     openapi_config=OpenAPIConfig(
         title='My API', version='1.0.0',
